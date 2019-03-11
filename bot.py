@@ -38,7 +38,8 @@ def on_release(key):
 
 def save():
     pickle.dump(data, open("data.p", "wb"))
-    print("Files Saved Successfully")
+    statusTv['text']= "Recording Saved Successfully"
+    statusTv['fg']= 'green'
 
 
 
@@ -50,6 +51,8 @@ def startRec():
     mouse_listener.start()
     print("Recording Started")
     ptime= time.time() 
+    statusTv['text']= "Press ESC to Stop"
+    statusTv['fg']= "red"
 
 
 def stopRec(last= True):
@@ -58,7 +61,7 @@ def stopRec(last= True):
     save()
     key_listener.stop() 
     mouse_listener.stop()  
-    print("Recording Stopped")
+    statusTv['text']= "Recording Stopped"
 
 #####################################################################################
 
@@ -69,6 +72,9 @@ def stopPlay():
 
     
 def playRec():
+    statusTv['text']= "Playing"
+    statusTv['fg']= 'green'
+    root.update()
     data = pickle.load( open( "data.p", "rb" ) )
     mouse = Controller()
     for dd in data:
@@ -78,6 +84,7 @@ def playRec():
         time.sleep(dur)
         mouse.position = (x, y)
         mouse.click(Button.left)
+    statusTv['text']= "Played Successfully"
 
 
 def playInLoop():
@@ -85,6 +92,8 @@ def playInLoop():
     live= True
     key_listener = keyboard.Listener(on_release=on_release)
     key_listener.start()
+    statusTv['text']= "Press SPACE to Stop"
+    statusTv['fg']= 'red'
     while(live):
         data = pickle.load( open( "data.p", "rb" ) )
         mouse = Controller()
@@ -103,20 +112,21 @@ def playInLoop():
 
 
 #####################################################################################
+statusTv= tk.Label(root, text= "READY", fg= 'green', font = "Verdana 12 bold")
+statusTv.pack()
 startB= tk.Button(root, text= "Start Recording", width= 25, command= startRec)
 startB.pack() 
 stopB= tk.Button(root, text= "Stop Recording", width= 25, command= stopRec)
 stopB.pack() 
-stopTv= tk.Label(root, text= "Press ESC to Stop")
-stopTv.pack()
 playB= tk.Button(root, text= "Play", width= 25, command= playRec)
 playB.pack() 
 pilB= tk.Button(root, text= "Play in Loop", width= 25, command= playInLoop)
 pilB.pack() 
 pilsB= tk.Button(root, text= "Stop Playing", width= 25, command= stopPlay)
 pilsB.pack() 
-exitTv= tk.Label(root, text= "Press SPACE to Stop")
-exitTv.pack()
 exitB= tk.Button(root, text= "Close", width= 25, command= root.destroy)
 exitB.pack() 
+
+root.attributes('-topmost', True)
+root.update()
 root.mainloop()  
