@@ -62,6 +62,7 @@ def stopRec(last= True):
     key_listener.stop() 
     mouse_listener.stop()  
     statusTv['text']= "Recording Stopped"
+    statusTv['fg']= "green"
 
 #####################################################################################
 
@@ -106,6 +107,8 @@ def playInLoop():
             time.sleep(dur)
             mouse.position = (x, y)
             mouse.click(Button.left)
+    statusTv['text']= "Stopped Successfully"
+    statusTv['fg']= "green"
 
 
 
