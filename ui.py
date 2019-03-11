@@ -48,17 +48,17 @@ def startRec():
     key_listener.start()
     mouse_listener= mouse.Listener(on_click= on_click)
     mouse_listener.start()
+    print("Recording Started")
     ptime= time.time() 
 
 
 def stopRec(last= True):
-    live= False
     if(last):
         del data[-1]
     save()
     key_listener.stop() 
     mouse_listener.stop()  
-    print("DONE")
+    print("Recording Stopped")
 
 #####################################################################################
 
@@ -107,13 +107,15 @@ startB= tk.Button(root, text= "Start Recording", width= 25, command= startRec)
 startB.pack() 
 stopB= tk.Button(root, text= "Stop Recording", width= 25, command= stopRec)
 stopB.pack() 
+stopTv= tk.Label(root, text= "Press ESC to Stop")
+stopTv.pack()
 playB= tk.Button(root, text= "Play", width= 25, command= playRec)
 playB.pack() 
 pilB= tk.Button(root, text= "Play in Loop", width= 25, command= playInLoop)
 pilB.pack() 
 pilsB= tk.Button(root, text= "Stop Playing", width= 25, command= stopPlay)
 pilsB.pack() 
-exitTv= tk.Label(root, text= "Press ESC to Stop")
+exitTv= tk.Label(root, text= "Press SPACE to Stop")
 exitTv.pack()
 exitB= tk.Button(root, text= "Close", width= 25, command= root.destroy)
 exitB.pack() 
