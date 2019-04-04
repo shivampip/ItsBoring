@@ -1,5 +1,6 @@
-# AutoClicker
-Just record your mouse clicks, key hits and play them. Written in Python
+# ItsBoring
+Sometimes its really boring to do some task repeatedly. which has specific pattern and can be easily automated.<br>
+Just record your mouse clicks, keyboard hits and play them once or in a loop.
 
 ## Installation
 ```
