@@ -12,6 +12,8 @@ cd AutoClicker
 python bot.py
 ```
 
+![view](/autocm.png)
+
 ### Recording
 * Click on start recording to start recording
 * To stop recording press 'ESC'
