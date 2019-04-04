@@ -2,6 +2,7 @@ import tkinter as tk
 from pynput import mouse
 from pynput import keyboard
 from pynput.mouse import Button, Controller
+from pynput.keyboard import Key, Controller as KeyController
 import time
 import pickle
 
@@ -22,12 +23,13 @@ def on_click(x, y, button, pressed):
         return 
     pos= [x,y]
     dur= time.time()- ptime
-    data.append({"dur":dur, "pos":pos})
+    data.append({'type': 'mouse', "dur":dur, "pos":pos, "btn": button})
     print(str(x)+" , "+str(y)+ " with "+str(dur))
     ptime= time.time()
     return live
 
 def on_release(key):
+    global ptime
     print('{0} released'.format(key))
     if key == keyboard.Key.esc:
         stopRec(last= False)
@@ -35,6 +37,11 @@ def on_release(key):
     if(key== keyboard.Key.space):
         stopPlay()
         return False 
+    dur= time.time()- ptime
+    data.append({'type':'keyboard', 'dur': dur, 'key': key})
+    print("Key "+str(key)+" with "+str(dur))
+    ptime= time.time()
+    return live 
 
 def save():
     pickle.dump(data, open("data.p", "wb"))
@@ -78,17 +85,27 @@ def playRec():
     root.update()
     data = pickle.load( open( "data.p", "rb" ) )
     mouse = Controller()
+    keyc= KeyController()
     for dd in data:
+        type= dd['type']
         dur= dd['dur']
-        x, y = dd['pos']
-        print("X "+str(x)+" Y "+str(y)+ "delay "+str(dur))
-        time.sleep(dur)
-        mouse.position = (x, y)
-        mouse.click(Button.left)
+        if(type=='mouse'):
+            x, y = dd['pos']
+            btn= dd['btn']
+            print("X "+str(x)+" Y "+str(y)+ "delay "+str(dur))
+            time.sleep(dur)
+            mouse.position = (x, y)
+            mouse.click(btn)
+        if(type=='keyboard'):
+            key= dd['key']
+            print("Keypress "+str(key))
+            time.sleep(dur)
+            keyc.press(key)
+            keyc.release(key)
     statusTv['text']= "Played Successfully"
 
 
-def playInLoop():
+def playInLoop(): 
     global live, key_listener
     live= True
     key_listener = keyboard.Listener(on_release=on_release)
@@ -98,15 +115,25 @@ def playInLoop():
     while(live):
         data = pickle.load( open( "data.p", "rb" ) )
         mouse = Controller()
+        keyc= KeyController()
         for dd in data:
             if(not live):
                 break 
+            type= dd['type']
             dur= dd['dur']
-            x, y = dd['pos']
-            print("X "+str(x)+" Y "+str(y)+ "delay "+str(dur))
-            time.sleep(dur)
-            mouse.position = (x, y)
-            mouse.click(Button.left)
+            if(type=='mouse'):
+                x, y = dd['pos']
+                btn= dd['btn']
+                print("X "+str(x)+" Y "+str(y)+ "delay "+str(dur))
+                time.sleep(dur)
+                mouse.position = (x, y)
+                mouse.click(btn)
+            if(type=='keyboard'):
+                key= dd['key']
+                print("Keypress "+str(key))
+                time.sleep(dur)
+                keyc.press(key)
+                keyc.release(key)
     statusTv['text']= "Stopped Successfully"
     statusTv['fg']= "green"
 
@@ -132,4 +159,5 @@ exitB.pack()
 
 root.attributes('-topmost', True)
 root.update()
+
 root.mainloop()  
