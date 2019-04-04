@@ -1,2 +1,2 @@
 # AutoClicker
-Just record your mouse clicks and play them. Written in Python
+Just record your mouse clicks, key hits and play them. Written in Python
