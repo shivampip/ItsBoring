@@ -7,7 +7,7 @@ import time
 import pickle
 
 root= tk.Tk()
-root.title("Let me do it")
+root.title("Its Boring")
 #####################################################################################
 
 data= []
