@@ -13,6 +13,7 @@ root.title("Its Boring")
 data= []
 ptime= time.time()
 live= True
+speedx = 1
 key_listener= None
 mouse_listener= None
 
@@ -88,7 +89,7 @@ def playRec():
     keyc= KeyController()
     for dd in data:
         type= dd['type']
-        dur= dd['dur']
+        dur= dd['dur']/ float(speedx)
         if(type=='mouse'):
             x, y = dd['pos']
             btn= dd['btn']
@@ -120,7 +121,7 @@ def playInLoop():
             if(not live):
                 break 
             type= dd['type']
-            dur= dd['dur']
+            dur= dd['dur']/ float(speedx)
             if(type=='mouse'):
                 x, y = dd['pos']
                 btn= dd['btn']
@@ -138,6 +139,12 @@ def playInLoop():
     statusTv['fg']= "green"
 
 
+def on_slider(value):
+    global speedx
+    speedx= value
+    statusTv['text']= "Speed: {}x".format(speedx)
+    statusTv['fg']= "green"
+
 
 
 
@@ -148,6 +155,10 @@ startB= tk.Button(root, text= "Start Recording", width= 25, command= startRec)
 startB.pack() 
 stopB= tk.Button(root, text= "Stop Recording", width= 25, command= stopRec)
 stopB.pack() 
+
+slider= tk.Scale(root, from_= 1, to= 25, command= on_slider, orient= 'horizontal', label= "Speed", length= 200)
+slider.pack()
+
 playB= tk.Button(root, text= "Play", width= 25, command= playRec)
 playB.pack() 
 pilB= tk.Button(root, text= "Play in Loop", width= 25, command= playInLoop)
@@ -157,7 +168,7 @@ pilsB.pack()
 exitB= tk.Button(root, text= "Close", width= 25, command= root.destroy)
 exitB.pack() 
 
-root.attributes('-topmost', True)
-root.update()
+#root.attributes('-topmost', True)
+#root.update()
 
 root.mainloop()  
