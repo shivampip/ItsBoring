@@ -23,4 +23,4 @@ python bot.py
 ### Playing
 * Play once by clicking play
 * Or Play in loop
-* To stop play press 'SPACE'
+* To stop play press 'HOME'
