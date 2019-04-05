@@ -28,14 +28,14 @@ def on_click(x, y, button, pressed):
     print(str(x)+" , "+str(y)+ " with "+str(dur))
     ptime= time.time()
     return live
-
+     
 def on_release(key):
     global ptime
     print('{0} released'.format(key))
     if key == keyboard.Key.esc:
         stopRec(last= False)
         return False
-    if(key== keyboard.Key.space):
+    if(key== keyboard.Key.home and not is_rec):
         stopPlay()
         return False 
     dur= time.time()- ptime
@@ -49,26 +49,29 @@ def save():
     statusTv['text']= "Recording Saved Successfully"
     statusTv['fg']= 'green'
 
-
+is_rec= False
 
 def startRec():
-    global key_listener, mouse_listener, ptime
+    global key_listener, mouse_listener, ptime, is_rec
     key_listener = keyboard.Listener(on_release=on_release)
     key_listener.start()
     mouse_listener= mouse.Listener(on_click= on_click)
     mouse_listener.start()
     print("Recording Started")
+    is_rec= True 
     ptime= time.time() 
     statusTv['text']= "Press ESC to Stop"
     statusTv['fg']= "red"
 
 
 def stopRec(last= True):
+    global is_rec
     if(last):
         del data[-1]
     save()
     key_listener.stop() 
     mouse_listener.stop()  
+    is_rec= False 
     statusTv['text']= "Recording Stopped"
     statusTv['fg']= "green"
 
@@ -78,8 +81,8 @@ def stopPlay():
     global live 
     print("Stopping play")
     live= False 
-
     
+
 def playRec():
     statusTv['text']= "Playing"
     statusTv['fg']= 'green'
@@ -111,7 +114,7 @@ def playInLoop():
     live= True
     key_listener = keyboard.Listener(on_release=on_release)
     key_listener.start()
-    statusTv['text']= "Press SPACE to Stop"
+    statusTv['text']= "Press HOME to Stop"
     statusTv['fg']= 'red'
     while(live):
         data = pickle.load( open( "data.p", "rb" ) )
