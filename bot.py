@@ -20,11 +20,11 @@ mouse_listener= None
 
 def on_click(x, y, button, pressed):
     global ptime
-    #if(pressed):
-    #    return 
+    if(pressed):
+        return 
     pos= [x,y]
     dur= time.time()- ptime
-    data.append({'type': 'mouse', "dur":dur, "pos":pos, "btn": button, 'pressed': pressed})
+    data.append({'type': 'mouse', "dur":dur, "pos":pos, "btn": button})
     print(str(x)+" , "+str(y)+ " with "+str(dur))
     ptime= time.time()
     return live
@@ -96,15 +96,10 @@ def playRec():
         if(type=='mouse'):
             x, y = dd['pos']
             btn= dd['btn']
-            pressed= dd['pressed']
             print("X "+str(x)+" Y "+str(y)+ "delay "+str(dur))
             time.sleep(dur)
             mouse.position = (x, y)
-            #mouse.click(btn)
-            if(pressed):
-                mouse.press(btn)
-            else:
-                mouse.release(btn)
+            mouse.click(btn)
         if(type=='keyboard'):
             key= dd['key']
             print("Keypress "+str(key))
