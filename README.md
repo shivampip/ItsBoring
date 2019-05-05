@@ -10,7 +10,8 @@ cd AutoClicker
 
 ## Run the applicaiton
 ```
-python bot.py
+python bot.py    #Basic version
+python adbot.py  #Advanced version
 ```
 
 ![view](/autocm.png)
