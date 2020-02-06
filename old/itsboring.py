@@ -7,7 +7,7 @@ import time
 import pickle
 
 root= tk.Tk()
-root.title("Just Automate")
+root.title("Its Boring")
 #####################################################################################
 
 data= []
@@ -20,15 +20,39 @@ mouse_listener= None
 
 def on_click(x, y, button, pressed):
     global ptime
-    if(pressed):
-        return 
+    #if(pressed):
+    #    return 
     pos= [x,y]
     dur= time.time()- ptime
-    data.append({'type': 'mouse', "dur":dur, "pos":pos, "btn": button})
+    data.append({'type': 'mouse', "dur":dur, "pos":pos, "btn": button, "pressed":pressed})
     print(str(x)+" , "+str(y)+ " with "+str(dur))
     ptime= time.time()
     return live
      
+def on_scroll(x, y, dx, dy):
+    global ptime 
+    pos= [x,y]
+    dur= time.time()- ptime
+    amount= [dx, dy]
+    data.append({'type':'scroll', 'dur': dur, 'pos': pos, 'amount': amount})
+    print('Scrolled {0} at {1}'.format('down' if dy < 0 else 'up',(x, y)))
+    return live 
+
+def on_press(key):
+    global ptime
+    print("{} pressed".format(key))
+    if key == keyboard.Key.esc:
+        stopRec(last= False)
+        return False
+    if(key== keyboard.Key.home and not is_rec):
+        stopPlay()
+        return False 
+    dur= time.time()- ptime
+    data.append({'type':'keypress', 'dur': dur, 'key': key})
+    print("Key "+str(key)+" with "+str(dur))
+    ptime= time.time()
+    return live 
+
 def on_release(key):
     global ptime
     print('{0} released'.format(key))
@@ -39,13 +63,13 @@ def on_release(key):
         stopPlay()
         return False 
     dur= time.time()- ptime
-    data.append({'type':'keyboard', 'dur': dur, 'key': key})
+    data.append({'type':'keyrelease', 'dur': dur, 'key': key})
     print("Key "+str(key)+" with "+str(dur))
     ptime= time.time()
     return live 
 
 def save():
-    pickle.dump(data, open("data.p", "wb"))
+    pickle.dump(data, open("recordings/data.p", "wb"))
     statusTv['text']= "Recording Saved Successfully"
     statusTv['fg']= 'green'
 
@@ -53,8 +77,9 @@ is_rec= False
 
 def startRec():
     global key_listener, mouse_listener, ptime, is_rec
-    key_listener = keyboard.Listener(on_release=on_release)
+    key_listener = keyboard.Listener(on_press= on_press, on_release=on_release)
     key_listener.start()
+    #mouse_listener= mouse.Listener(on_click= on_click, on_scroll= on_scroll)
     mouse_listener= mouse.Listener(on_click= on_click)
     mouse_listener.start()
     print("Recording Started")
@@ -62,7 +87,6 @@ def startRec():
     ptime= time.time() 
     statusTv['text']= "Press ESC to Stop"
     statusTv['fg']= "red"
-
 
 def stopRec(last= True):
     global is_rec
@@ -81,7 +105,40 @@ def stopPlay():
     global live 
     print("Stopping play")
     live= False 
-    
+
+
+def play(data, mouse, keyc):
+    global live 
+    for dd in data:
+        type= dd['type']
+        dur= dd['dur']/ float(speedx)
+        time.sleep(dur)
+        if(not live):
+            break 
+        if(type=='mouse'):
+            x, y = dd['pos']
+            btn= dd['btn']
+            pressed= dd['pressed']
+            print("X "+str(x)+" Y "+str(y)+ "delay "+str(dur))
+            mouse.position = (x, y)
+            if(pressed):
+                mouse.press(btn)
+            else:
+                mouse.release(btn)
+            #mouse.click(btn)
+        if(type=='keypress'):
+            key= dd['key']
+            print("Keypress "+str(key))
+            keyc.press(key)
+        if(type=='keyrelease'):
+            key= dd['key']
+            print("Keyrelease "+str(key))
+            keyc.release(key)
+  
+        #if(type=='scroll'):
+        #    x, y= dd['pos']
+        #    dx, dy = dd['amount']
+        #    mouse.scroll(dx, dy)
 
 def playRec():
     statusTv['text']= "Playing"
@@ -90,22 +147,7 @@ def playRec():
     data = pickle.load( open( "data.p", "rb" ) )
     mouse = Controller()
     keyc= KeyController()
-    for dd in data:
-        type= dd['type']
-        dur= dd['dur']/ float(speedx)
-        if(type=='mouse'):
-            x, y = dd['pos']
-            btn= dd['btn']
-            print("X "+str(x)+" Y "+str(y)+ "delay "+str(dur))
-            time.sleep(dur)
-            mouse.position = (x, y)
-            mouse.click(btn)
-        if(type=='keyboard'):
-            key= dd['key']
-            print("Keypress "+str(key))
-            time.sleep(dur)
-            keyc.press(key)
-            keyc.release(key)
+    play(data, mouse, keyc) 
     statusTv['text']= "Played Successfully"
 
 
@@ -116,28 +158,11 @@ def playInLoop():
     key_listener.start()
     statusTv['text']= "Press HOME to Stop"
     statusTv['fg']= 'red'
+    data = pickle.load( open( "data.p", "rb" ) )
+    mouse = Controller()
+    keyc= KeyController()
     while(live):
-        data = pickle.load( open( "data.p", "rb" ) )
-        mouse = Controller()
-        keyc= KeyController()
-        for dd in data:
-            if(not live):
-                break 
-            type= dd['type']
-            dur= dd['dur']/ float(speedx)
-            if(type=='mouse'):
-                x, y = dd['pos']
-                btn= dd['btn']
-                print("X "+str(x)+" Y "+str(y)+ "delay "+str(dur))
-                time.sleep(dur)
-                mouse.position = (x, y)
-                mouse.click(btn)
-            if(type=='keyboard'):
-                key= dd['key']
-                print("Keypress "+str(key))
-                time.sleep(dur)
-                keyc.press(key)
-                keyc.release(key)
+        play(data, mouse, keyc)
     statusTv['text']= "Stopped Successfully"
     statusTv['fg']= "green"
 
@@ -161,6 +186,20 @@ stopB.pack()
 
 slider= tk.Scale(root, from_= 1, to= 25, command= on_slider, orient= 'horizontal', label= "Speed", length= 200)
 slider.pack()
+
+
+#========================================
+import glob 
+import os
+from tkinter import END
+
+for ff in glob.glob("recordings/*.p"):
+    nn= os.path.basename(ff)
+    nn= nn[: nn.find("_")]
+    playB= tk.Button(root, text= str(nn), width= 25, command= lambda: just_play(nn))
+    playB.pack() 
+#========================================
+
 
 playB= tk.Button(root, text= "Play", width= 25, command= playRec)
 playB.pack() 

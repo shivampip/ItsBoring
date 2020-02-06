@@ -7,7 +7,7 @@ import time
 import pickle
 
 root= tk.Tk()
-root.title("Media Test")
+root.title("Recorder")
 #####################################################################################
 
 data= []
@@ -16,9 +16,81 @@ live= True
 speedx = 1
 key_listener= None
 mouse_listener= None
+counter= 0
+
+ywait= "none"
+out_cap= {}
+
+
+#############################################################
+
+import pyautogui
+import pyautogui
+
+
+def capture_area(data, name):
+    reg= (data['left'], data['top'], data['width'], data['height'])
+    ss= pyautogui.screenshot(region= reg)
+    ss.save(name)
+    statusTv['Output Saved']
+    return name 
+
+def capture():
+    fname= nameE.get()
+    screenWidth, screenHeight = pyautogui.size()
+    x, y = pyautogui.position()
+    width, height = (100, 60)
+    sx, sy= width/2, height/2
+    
+    left= x- sx 
+    if(left<0):
+        left= 0
+    top= y- sy 
+    if(top<0):
+        top= 0
+
+    if(x+sx>screenWidth):
+        width= x+sx- screenWidth
+
+    if(y+sy>screenHeight):
+        height= y+ sy- screenHeight
+
+    reg= ( left, top, width, height)
+    ss= pyautogui.screenshot(region= reg)
+
+    name= "imgs/{}__{}_{}.png".format(fname, x, y)
+    ss.save(name)
+    return name 
+
+
+#############################################################
+
+
+
 
 
 def on_click(x, y, button, pressed):
+    print("PRessed is {}".format(pressed))
+    global ywait, out_cap, counter
+    if(ywait=='out_br' and pressed):
+        out_cap['width']= x - out_cap['left']
+        out_cap['height']= y - out_cap['top']
+        statusTv['text']= "Done"
+        ywait= 'none'
+        capture_area(out_cap, "imgs/{}_{}_out.png".format(nameE.get(), counter))
+        counter+= 1
+        return live
+
+    if(ywait=='out_tl' and pressed):
+        out_cap['left']= x
+        out_cap['top']= y 
+        statusTv['text']= "Select Bottom Right"
+        ywait= 'out_br'
+        return live 
+
+
+
+    #ss= capture()
     global ptime
     #if(pressed):
     #    return 
@@ -45,7 +117,6 @@ def on_press(key):
         stopRec(last= False)
         return False
     if(key== keyboard.Key.home and not is_rec):
-        stopPlay()
         return False 
     dur= time.time()- ptime
     data.append({'type':'keypress', 'dur': dur, 'key': key})
@@ -60,7 +131,6 @@ def on_release(key):
         stopRec(last= False)
         return False
     if(key== keyboard.Key.home and not is_rec):
-        stopPlay()
         return False 
     dur= time.time()- ptime
     data.append({'type':'keyrelease', 'dur': dur, 'key': key})
@@ -69,7 +139,9 @@ def on_release(key):
     return live 
 
 def save():
-    pickle.dump(data, open("data.p", "wb"))
+    fname= nameE.get()
+    name= "recordings/{}_{}_input.p".format(fname, counter)
+    pickle.dump(data, open(name, "wb"))
     statusTv['text']= "Recording Saved Successfully"
     statusTv['fg']= 'green'
 
@@ -99,79 +171,16 @@ def stopRec(last= True):
     statusTv['text']= "Recording Stopped"
     statusTv['fg']= "green"
 
-#####################################################################################
-
-def stopPlay():
-    global live 
-    print("Stopping play")
-    live= False 
 
 
-def play(data, mouse, keyc):
-    global live 
-    for dd in data:
-        type= dd['type']
-        dur= dd['dur']/ float(speedx)
-        time.sleep(dur)
-        if(not live):
-            break 
-        if(type=='mouse'):
-            x, y = dd['pos']
-            btn= dd['btn']
-            pressed= dd['pressed']
-            print("X "+str(x)+" Y "+str(y)+ "delay "+str(dur))
-            mouse.position = (x, y)
-            if(pressed):
-                mouse.press(btn)
-            else:
-                mouse.release(btn)
-            #mouse.click(btn)
-        if(type=='keypress'):
-            key= dd['key']
-            print("Keypress "+str(key))
-            keyc.press(key)
-        if(type=='keyrelease'):
-            key= dd['key']
-            print("Keyrelease "+str(key))
-            keyc.release(key)
-  
-        #if(type=='scroll'):
-        #    x, y= dd['pos']
-        #    dx, dy = dd['amount']
-        #    mouse.scroll(dx, dy)
-
-def playRec():
-    statusTv['text']= "Playing"
-    statusTv['fg']= 'green'
-    root.update()
-    data = pickle.load( open( "data.p", "rb" ) )
-    mouse = Controller()
-    keyc= KeyController()
-    play(data, mouse, keyc) 
-    statusTv['text']= "Played Successfully"
+def captureOutput():
+    global mouse_listener, ywait
+    statusTv['text']= "Select Top-Left"
+    ywait= "out_tl"
+    mouse_listener= mouse.Listener(on_click= on_click)
+    mouse_listener.start()
 
 
-def playInLoop(): 
-    global live, key_listener
-    live= True
-    key_listener = keyboard.Listener(on_release=on_release)
-    key_listener.start()
-    statusTv['text']= "Press HOME to Stop"
-    statusTv['fg']= 'red'
-    data = pickle.load( open( "data.p", "rb" ) )
-    mouse = Controller()
-    keyc= KeyController()
-    while(live):
-        play(data, mouse, keyc)
-    statusTv['text']= "Stopped Successfully"
-    statusTv['fg']= "green"
-
-
-def on_slider(value):
-    global speedx
-    speedx= value
-    statusTv['text']= "Speed: {}x".format(speedx)
-    statusTv['fg']= "green"
 
 
 
@@ -179,20 +188,21 @@ def on_slider(value):
 #####################################################################################
 statusTv= tk.Label(root, text= "READY", fg= 'green', font = "Verdana 12 bold")
 statusTv.pack()
+nameE= tk.Entry(root)
+nameE.pack()
 startB= tk.Button(root, text= "Start Recording", width= 25, command= startRec)
 startB.pack() 
 stopB= tk.Button(root, text= "Stop Recording", width= 25, command= stopRec)
 stopB.pack() 
 
-slider= tk.Scale(root, from_= 1, to= 25, command= on_slider, orient= 'horizontal', label= "Speed", length= 200)
-slider.pack()
-
-playB= tk.Button(root, text= "Play", width= 25, command= playRec)
+playB= tk.Button(root, text= "Record Input", width= 25, command= startRec)
 playB.pack() 
-pilB= tk.Button(root, text= "Play in Loop", width= 25, command= playInLoop)
-pilB.pack() 
-pilsB= tk.Button(root, text= "Stop Playing", width= 25, command= stopPlay)
-pilsB.pack() 
+
+playB= tk.Button(root, text= "Capture Output", width= 25, command= captureOutput)
+playB.pack() 
+
+
+
 exitB= tk.Button(root, text= "Close", width= 25, command= root.destroy)
 exitB.pack() 
 
