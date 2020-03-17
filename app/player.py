@@ -30,7 +30,7 @@ def on_release(key):
     print('{0} released'.format(key))
     if key == keyboard.Key.esc:
         return False
-    if(key== keyboard.Key.home):
+    if(key== keyboard.Key.delete):
         stopPlay()
         return False 
     dur= time.time()- ptime
@@ -58,7 +58,7 @@ def play(data, mouse, keyc):
             x, y = dd['pos']
             btn= dd['btn']
             pressed= dd['pressed']
-            print("X "+str(x)+" Y "+str(y)+ "delay "+str(dur))
+            # print("X "+str(x)+" Y "+str(y)+ "delay "+str(dur))
             mouse.position = (x, y)
             if(pressed):
                 mouse.press(btn)
@@ -67,11 +67,11 @@ def play(data, mouse, keyc):
             #mouse.click(btn)
         if(type=='keypress'):
             key= dd['key']
-            print("Keypress "+str(key))
+            # print("Keypress "+str(key))
             keyc.press(key)
         if(type=='keyrelease'):
             key= dd['key']
-            print("Keyrelease "+str(key))
+            # print("Keyrelease "+str(key))
             keyc.release(key)
   
         #if(type=='scroll'):
@@ -83,7 +83,8 @@ def playRec():
     statusTv['text']= "Playing"
     statusTv['fg']= 'green'
     root.update()
-    data = pickle.load( open( "data.p", "rb" ) )
+    name= nameE.get();
+    data = pickle.load( open( "recordings/{}_0_input.p".format(name), "rb" ) )
     mouse = Controller()
     keyc= KeyController()
     play(data, mouse, keyc) 
@@ -97,7 +98,8 @@ def playInLoop():
     key_listener.start()
     statusTv['text']= "Press HOME to Stop"
     statusTv['fg']= 'red'
-    data = pickle.load( open( "data.p", "rb" ) )
+    name= nameE.get();
+    data = pickle.load( open( "recordings/{}_0_input.p".format(name), "rb" ) )
     mouse = Controller()
     keyc= KeyController()
     while(live):
@@ -122,11 +124,16 @@ def just_play(nn):
 
 #####################################################################################
 statusTv= tk.Label(root, text= "READY", fg= 'green', font = "Verdana 12 bold")
-statusTv.pack()
+statusTv.pack(padx=2, pady=2) 
 nameE= tk.Entry(root)
-nameE.pack()
+nameE.config(width=25, borderwidth = '4', relief='flat', bg='white')
+nameE.pack(padx=2, pady=2) 
 
-slider= tk.Scale(root, from_= 1, to= 25, command= on_slider, orient= 'horizontal', label= "Speed", length= 200)
+# statusTv= tk.Label(root, text= "Recordings", fg= 'gray', font = "Verdana 10")
+# statusTv.pack()
+
+# slider= tk.Scale(root, from_= 1, to= 25, command= on_slider, orient= 'horizontal', label= "Speed", length= 200)
+slider= tk.Scale(root, from_= 1, to= 25, command= on_slider, orient= 'horizontal',length= 200)
 slider.pack()
 
 
@@ -137,27 +144,53 @@ from tkinter import END
 
 
 
-playB= tk.Button(root, text= "Play", width= 25, command= playRec)
-playB.pack() 
-pilB= tk.Button(root, text= "Play in Loop", width= 25, command= playInLoop)
-pilB.pack() 
-pilsB= tk.Button(root, text= "Stop Playing", width= 25, command= stopPlay)
-pilsB.pack() 
-exitB= tk.Button(root, text= "Close", width= 25, command= root.destroy)
-exitB.pack() 
+playB= tk.Button(root, text= "Play", width= 25, command= playRec, borderwidth = '4', relief='flat', overrelief= 'ridge', bg='#63f542', activebackground='green' )
+playB.pack(padx=4, pady=2) 
+pilB= tk.Button(root, text= "Play in Loop", width= 25, command= playInLoop,  borderwidth = '4', relief='flat', overrelief= 'ridge', bg='#63f542', activebackground='green' )
+pilB.pack(padx=4, pady=2)  
+pilsB= tk.Button(root, text= "Stop Playing (press delete)", width= 25, command= stopPlay,  borderwidth = '4', relief='flat', overrelief= 'ridge', bg='#ffa1a1', activebackground='red' )
+pilsB.pack(padx=4, pady=2) 
+exitB= tk.Button(root, text= "Close", width= 25, command= root.destroy,  borderwidth = '4', relief='flat', overrelief= 'ridge', bg='#ffa1a1', activebackground='red' )
+exitB.pack(padx=4, pady=2) 
 
-statusTv= tk.Label(root, text= "Recordings", fg= 'gray', font = "Verdana 10")
-statusTv.pack()
 
+
+recs= []
 for ff in glob.glob("recordings/*.p"):
     nn= os.path.basename(ff)
     nn= nn[: nn.find("_")]
-    playB= tk.Button(root, text= str(nn), width= 25, command= lambda nn=nn: just_play(nn))
-    playB.pack() 
+    recs.append(nn)
+    # playB= tk.Button(root, text= str(nn), width= 25, command= lambda nn=nn: just_play(nn))
+    # playB.pack() 
 
+variable = tk.StringVar(root)
+variable.set(recs[0]) # default value
+w = tk.OptionMenu(root, variable , *recs,)
+w.config(width=25,  borderwidth = '4', relief='flat', bg='#a1ebff', activebackground='skyblue' )
+w.pack(padx=4, pady=2) 
 
+def callback(*args):
+    print("The selected item is {}".format(variable.get()))
+    just_play(variable.get())
+variable.trace("w", callback)
 
 #root.attributes('-topmost', True)
 #root.update()
+
+w = 200 # width for the Tk root
+h = 300 # height for the Tk root
+
+ws = root.winfo_screenwidth() # width of the screen
+hs = root.winfo_screenheight() # height of the screen
+
+# calculate x and y coordinates for the Tk root window
+# x = (ws/2) - (w/2)
+# y = (hs/2) - (h/2)
+x= ws- w;
+y= 0;
+
+# set the dimensions of the screen 
+# and where it is placed
+root.geometry('%dx%d+%d+%d' % (w, h, x, y))
 
 root.mainloop()  
